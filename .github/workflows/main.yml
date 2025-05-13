@@ -1,0 +1,35 @@
+name: Fintech Assignment Autograder
+
+on:
+  push:
+    paths:
+      - "**.py"
+      - "requirements.txt"
+      - ".github/workflows/main.yml"
+  pull_request:
+
+jobs:
+  grade-assignment:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Markowitz Part 1
+      run: |
+        python Markowitz.py --score all
+
+    - name: Run Markowitz Part 2
+      run: |
+        python Markowitz_2.py --score all
