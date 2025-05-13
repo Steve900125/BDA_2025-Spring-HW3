@@ -61,7 +61,12 @@ class EqualWeightPortfolio:
         """
         TODO: Complete Task 1 Below
         """
-        
+        weight = 1 / len(assets)
+
+        for date in df.index:
+            self.portfolio_weights.loc[date, assets] = weight
+            self.portfolio_weights.loc[date, self.exclude] = 0  # 確保 excluded 資產為 0 權重
+
         """
         TODO: Complete Task 1 Above
         """
@@ -112,14 +117,21 @@ class RiskParityPortfolio:
         """
         TODO: Complete Task 2 Below
         """
+        for i in range(self.lookback + 1, len(df)):
+            window_returns = df_returns.loc[df.index[i - self.lookback : i], assets]
+            
+            vol = window_returns.std(ddof=0)
+            inv_vol = 1.0 / vol
+            weights = inv_vol / inv_vol.sum()
 
+            self.portfolio_weights.loc[df.index[i], assets] = weights.values
         """
         TODO: Complete Task 2 Above
         """
 
         self.portfolio_weights.ffill(inplace=True)
         self.portfolio_weights.fillna(0, inplace=True)
-
+    
     def calculate_portfolio_returns(self):
         # Ensure weights are calculated
         if not hasattr(self, "portfolio_weights"):
@@ -184,11 +196,13 @@ class MeanVariancePortfolio:
                 """
                 TODO: Complete Task 3 Below
                 """
-
-                # Sample Code: Initialize Decision w and the Objective
-                # NOTE: You can modify the following code
-                w = model.addMVar(n, name="w", ub=1)
-                model.setObjective(w.sum(), gp.GRB.MAXIMIZE)
+                # ─── Begin Task 3 implementation: Mean-Variance Optimization ───
+                w = model.addMVar(n, lb=0, ub=1, name="w")
+                quad = w @ Sigma @ w
+                linear = mu @ w
+                model.setObjective(linear - gamma * quad / 2, gp.GRB.MAXIMIZE)
+                model.addConstr(w.sum() == 1)
+                # ─── End Task 3 implementation ───
 
                 """
                 TODO: Complete Task 3 Above

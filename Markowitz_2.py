@@ -69,7 +69,29 @@ class MyPortfolio:
         """
         TODO: Complete Task 4 Below
         """
+        # ─── Begin Task 4 implementation: Dual, Risk-Adjusted Momentum ───
+        for i in range(self.lookback, len(self.price)):
+            date = self.price.index[i]
+            # 1) SPY 絕對動量：過去 lookback 天報酬
+            spy_ret = self.price['SPY'].iloc[i] / self.price['SPY'].iloc[i-self.lookback] - 1
 
+            # 預設為全空手
+            w = pd.Series(0.0, index=assets)
+
+            if spy_ret > 0:
+                # 2) 計算各 ETF 的累積報酬率與歷史波動
+                window = self.price[assets].iloc[i-self.lookback : i]
+                ret    = window.iloc[-1] / window.iloc[0] - 1
+                vol    = self.returns[assets].iloc[i-self.lookback : i].std(ddof=0)
+                signal = ret / vol
+
+                # 3) 風險調整後選出前 5 名
+                top5 = signal.nlargest(5).index
+                w[top5] = 1.0 / len(top5)
+
+            # 寫入當日權重
+            self.portfolio_weights.loc[date, assets] = w.values
+        # ─── End Task 4 implementation ───
         """
         TODO: Complete Task 4 Above
         """
